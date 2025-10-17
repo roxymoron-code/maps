@@ -11,6 +11,8 @@
   <script>
     let map;
 
+
+
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 52.396, lng: -0.725 },
@@ -24,11 +26,19 @@ function initMap() {
         complete: function (results) {
             results.data.forEach(row => {
                 if (row.Latitude && row.Longitude) {
-                    new google.maps.marker.AdvancedMarkerElement({
+                   let marker = new google.maps.marker.AdvancedMarkerElement({
                         map: map,
                         position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
-                        title: row.postcode
+                        title: row.postcode,
+                        content: pin.element,
+                        gmpClickable: true,
                     });
+                  marker.addListener('click', ({ domEvent, latLng }) => {
+                    const { target } = domEvent;
+                    infoWindow.close();
+                    infoWindow.setContent(marker.title);
+                    infoWindow.open(marker.map, marker);
+                  });
                 }
             });
         }
@@ -37,6 +47,7 @@ function initMap() {
   </script>
 </body>
 </html>
+
 
 
 
