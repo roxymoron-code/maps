@@ -10,15 +10,31 @@ async function initMap() {
     mapId: 'DEMO_MAP_ID',
   });
 
-  // Sample CSV data as a multi-line string.
-  // You can replace this with your own data.
-  const csvData = "/data/disp_postcodes_latlng.csv";
-
-  const data = parseCSVData(csvData);
+  const panel = document.getElementById("panel-content");
+  panel.innerHTML = "<p>Loading data from '/data/disp_postcodes_latlng'...</p>";
 
   overlay = new deck.GoogleMapsOverlay({});
   overlay.setMap(map);
-  updateHeatmap(data);
+
+  try {
+    const response = await fetch('/data/disp_postcodes_latlng');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const csvData = await response.text();
+    const data = parseCSVData(csvData);
+
+    if (data.length > 0) {
+      updateHeatmap(data);
+      panel.innerHTML = "<p>This heatmap visualizes data loaded from the CSV file specified in the script.</p>";
+    } else {
+      throw new Error("No data could be parsed from the CSV. Check headers and format.");
+    }
+  } catch (error) {
+    console.error('Error loading or processing CSV data:', error);
+    panel.innerHTML = `<p><strong>Error:</strong> Could not load or parse the CSV data from the path '/data/disp_postcodes_latlng'.</p>
+                       <p>Please ensure the file exists at that path on your server and is publicly accessible. The preview may not work if the file is not hosted, but the code will work in your local environment if the file structure is correct.</p>`;
+  }
 }
 
 function updateHeatmap(data) {
@@ -34,7 +50,6 @@ function updateHeatmap(data) {
 
 function parseCSVData(text) {
   const data = [];
-  // Trim whitespace and split by new lines, filtering out empty lines
   const lines = text.trim().split('\n').filter(line => line.trim() !== '');
   if (lines.length < 2) {
       console.error("CSV data must have a header and at least one data row.");
@@ -42,11 +57,11 @@ function parseCSVData(text) {
   }
 
   const headers = lines[0].toLowerCase().split(',').map(header => header.trim());
-  const latIndex = headers.indexOf('Latitude');
-  const lngIndex = headers.indexOf('Longitude');
+  const latIndex = headers.indexOf('latitude');
+  const lngIndex = headers.indexOf('longitude');
 
   if (latIndex === -1 || lngIndex === -1) {
-      console.error("CSV data must contain 'lat' and 'lng' columns.");
+      console.error("CSV data must contain 'Latitude' and 'Longitude' columns.");
       return [];
   }
 
@@ -57,7 +72,6 @@ function parseCSVData(text) {
         const lng = parseFloat(values[lngIndex]);
 
         if (!isNaN(lat) && !isNaN(lng)) {
-            // deck.gl expects data in [longitude, latitude] format
             data.push([lng, lat]);
         }
     }
@@ -66,5 +80,6 @@ function parseCSVData(text) {
 }
 
 initMap();
+
 
 
