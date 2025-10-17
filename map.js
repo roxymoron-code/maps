@@ -14,9 +14,10 @@ async function initMap() {
   const infoWindow = new InfoWindow();
 
   // Inlined CSV data. You can replace this with a URL using the `download` property.
-  const csvData = `postcode,Latitude,Longitude\nSW1A 0AA,51.5010,-0.1419\nPE35 6EN,52.8318,0.5297\nBT7 1NN,54.5843,-5.9331\nTR21 0HE,49.9360,-6.3220`;
+  const csvData = "data/disp_postcodes_latlng.csv";
 
   Papa.parse(csvData, {
+    download: true,
     header: true,
     complete: function (results) {
       const bounds = new LatLngBounds();
