@@ -1,30 +1,12 @@
-// Make initMap globally accessible for Google Maps callback
-window.initMap = async function () {
-  await google.maps.importLibrary("maps");
-  await google.maps.importLibrary("marker");
+async function initMap() {
+  const { Map } = await google.maps.importLibrary("maps");
 
-  const map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 52.396, lng: -0.725 },
+  const map = new Map(document.getElementById("map"), {
+    center: { lat: 37.422, lng: -122.084 }, // Centered on Googleplex
     zoom: 10,
+    mapId: 'DEMO_MAP_ID', // Using a demo map ID
+    gestureHandling: "greedy"
   });
+}
 
-  Papa.parse("data/disp_postcodes_latlng.csv", {
-    download: true,
-    header: true,
-    complete: function (results) {
-      results.data.forEach(row => {
-        if (row.Latitude && row.Longitude) {
-          const marker = new google.maps.marker.AdvancedMarkerElement({
-            map: map,
-            position: {
-              lat: parseFloat(row.Latitude),
-              lng: parseFloat(row.Longitude)
-            },
-            title: row.postcode,
-            gmpClickable: true,
-          });
-        }
-      });
-    }
-  });
-};
+initMap();
