@@ -3,6 +3,7 @@ let overlay;
 
 async function initMap() {
   const { Map } = await google.maps.importLibrary("maps");
+  const { ControlPosition } = await google.maps.importLibrary("core");
 
   map = new Map(document.getElementById("map"), {
     zoom: 2,
@@ -10,8 +11,16 @@ async function initMap() {
     mapId: 'DEMO_MAP_ID',
   });
 
-  const panel = document.getElementById("panel-content");
-  panel.innerHTML = "<p>Loading data from '/data/disp_postcodes_latlng'...</p>";
+  // Create the panel programmatically
+  const panel = document.createElement("div");
+  panel.classList.add("heatmap-panel");
+  panel.innerHTML = `
+    <h2>CSV Heatmap</h2>
+    <div id="panel-content"><p>Loading data from '/data/disp_postcodes_latlng'...</p></div>
+  `;
+  map.controls[ControlPosition.TOP_LEFT].push(panel);
+  const panelContent = document.getElementById("panel-content");
+
 
   overlay = new deck.GoogleMapsOverlay({});
   overlay.setMap(map);
@@ -26,13 +35,13 @@ async function initMap() {
 
     if (data.length > 0) {
       updateHeatmap(data);
-      panel.innerHTML = "<p>This heatmap visualizes data loaded from the CSV file specified in the script.</p>";
+      panelContent.innerHTML = "<p>This heatmap visualizes data loaded from the CSV file specified in the script.</p>";
     } else {
       throw new Error("No data could be parsed from the CSV. Check headers and format.");
     }
   } catch (error) {
     console.error('Error loading or processing CSV data:', error);
-    panel.innerHTML = `<p><strong>Error:</strong> Could not load or parse the CSV data from the path '/data/disp_postcodes_latlng'.</p>
+    panelContent.innerHTML = `<p><strong>Error:</strong> Could not load or parse the CSV data from the path '/data/disp_postcodes_latlng'.</p>
                        <p>Please ensure the file exists at that path on your server and is publicly accessible. The preview may not work if the file is not hosted, but the code will work in your local environment if the file structure is correct.</p>`;
   }
 }
@@ -56,7 +65,7 @@ function parseCSVData(text) {
       return [];
   }
 
-  const headers = lines[0].toLowerCase().split(',').map(header => header.trim());
+  const headers = lines.toLowerCase().split(',').map(header => header.trim());
   const latIndex = headers.indexOf('latitude');
   const lngIndex = headers.indexOf('longitude');
 
@@ -80,6 +89,3 @@ function parseCSVData(text) {
 }
 
 initMap();
-
-
-
