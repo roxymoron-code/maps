@@ -24,7 +24,9 @@
         download: true,
         header: true,
         complete: function(results) {
+          console.log("CSV parsed:", results);
           const postcodes = results.data.map(row => row.postcode).filter(Boolean);
+          console.log("Postcodes extracted:", postcodes);
           geocodePostcodes(postcodes);
         }
       });
@@ -53,3 +55,4 @@
   </script>
 </body>
 </html>
+
