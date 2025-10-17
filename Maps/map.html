@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dispersal Postcodes</title>
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7VuEA3DD4NRyb17yROtmK_lqo92HY1_Y"</script>
+  <!-- PapaParse CSV parser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.jsead"</script>
+
+<body onload="initMap()">
+  <div id="map" style="height: 600px; width: 100%;"></div>
+
+  <script>
+    let map;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 52.396, lng: -0.725 },
+        zoom: 10,
+      });
+
+      // Load and parse the CSV file
+      Papa.parse("data/disp_postcodes.csv", {
+        download: true,
+        header: true,
+        complete: function(results) {
+          const postcodes = results.data.map(row => row.postcode).filter(Boolean);
+          geocodePostcodes(postcodes);
+        }
+      });
+    }
+
+    function geocodePostcodes(postcodes) {
+      const geocoder = new google.maps.Geocoder();
+
+      postcodes.forEach((postcode, index) => {
+        setTimeout(() => {
+          geocoder.geocode({ address: postcode }, function (results, status) {
+            if (status === "OK") {
+              const location = results[0].geometry.location;
+              new google.maps.Marker({
+                map: map,
+                position: location,
+                title: postcode
+              });
+            } else {
+              console.error("Geocode failed for " + postcode + ": " + status);
+            }
+          });
+        }, index * 200);
+      });
+    }
+  </script>
+</body>
+</html>
