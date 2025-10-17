@@ -30,7 +30,6 @@ function initMap() {
                         map: map,
                         position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
                         title: row.postcode,
-                        content: pin.element,
                         gmpClickable: true,
                     });
                   marker.addListener('click', ({ domEvent, latLng }) => {
@@ -47,6 +46,7 @@ function initMap() {
   </script>
 </body>
 </html>
+
 
 
 
