@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Dispersal Postcodes</title>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7VuEA3DD4NRyb17yROtmK_lqo92HY1_Y&callback=initMap"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB7VuEA3DD4NRyb17yROtmK_lqo92HY1_Y&callback=initMap&v=weekly&libraries=marker" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
@@ -24,7 +24,7 @@ function initMap() {
         complete: function (results) {
             results.data.forEach(row => {
                 if (row.Latitude && row.Longitude) {
-                    new google.maps.Marker({
+                    new google.maps.marker.AdvancedMarkerElement({
                         map: map,
                         position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
                         title: row.postcode
@@ -37,6 +37,7 @@ function initMap() {
   </script>
 </body>
 </html>
+
 
 
 
