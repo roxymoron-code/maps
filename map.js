@@ -1,12 +1,29 @@
 async function initMap() {
-  const { Map } = await google.maps.importLibrary("maps");
+  const { Map } = 
+    await google.maps.importLibrary("maps");
+    await google.maps.importLibrary("marker");
 
   const map = new Map(document.getElementById("map"), {
-    center: { lat: 37.422, lng: -122.084 }, // Centered on Googleplex
+    center: { lat: 52.396, lng: -0.725 },
     zoom: 10,
-    mapId: 'DEMO_MAP_ID', // Using a demo map ID
     gestureHandling: "greedy"
   });
-}
+
+  Papa.parse("data/disp_postcodes_latlng.csv", {
+    download: true,
+    header: true,
+    complete: function (results) {
+      results.data.forEach(row => {
+        if (row.Latitude && row.Longitude) {
+          const marker = new google.maps.marker.AdvancedMarkerElement({
+            map: map,
+            position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
+            title: row.postcode,
+          });
+        }
+      });
+    }
+  });
+})();
 
 initMap();
