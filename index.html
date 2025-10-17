@@ -22,37 +22,21 @@
         download: true,
         header: true,
         complete: function(results) {
-          console.log("CSV parsed:", results);
-          const postcodes = results.data.map(row => row.postcode).filter(Boolean);
-          console.log("Postcodes extracted:", postcodes);
-          geocodePostcodes(postcodes);
-        }
-      });
-    }
-
-    function geocodePostcodes(postcodes) {
-      const geocoder = new google.maps.Geocoder();
-
-      postcodes.forEach((postcode, index) => {
-        setTimeout(() => {
-          geocoder.geocode({ address: postcode }, function (results, status) {
-            if (status === "OK") {
-              const location = results[0].geometry.location;
+          results.data.forEach(row => {
+            if (row.Latitude && row.Longitude) {
               new google.maps.Marker({
                 map: map,
-                position: location,
-                title: postcode
+                position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
+                title: row.postcode
               });
-            } else {
-              console.error("Geocode failed for " + postcode + ": " + status);
-            }
+                }
           });
-        }, index * 200);
+        }
       });
-    }
   </script>
 </body>
 </html>
+
 
 
 
