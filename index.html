@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dispersal Postcodes</title>
+  <title>Heatmap from In-Script CSV Data</title>
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
   <div id="map"></div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <div id="panel">
+    <h2>CSV Heatmap</h2>
+    <p>This heatmap visualizes sample CSV data loaded directly from the script. You can modify the data in the <code>script.js</code> file.</p>
+  </div>
+  <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+  <script src="https://unpkg.com/@deck.gl/google-maps@latest/dist.min.js"></script>
   <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t.toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
     key: "AIzaSyB7VuEA3DD4NRyb17yROtmK_lqo92HY1_Y",
-    v: "weekly",
-    libraries: "visualization"
+    v: "weekly"
   });</script>
   <script src="map.js"></script>
 </body>
