@@ -1,6 +1,5 @@
-
-// Load Google Maps and CSV data
-(async function () {
+// Make initMap globally accessible for Google Maps callback
+window.initMap = async function () {
   await google.maps.importLibrary("maps");
   await google.maps.importLibrary("marker");
 
@@ -17,7 +16,10 @@
         if (row.Latitude && row.Longitude) {
           const marker = new google.maps.marker.AdvancedMarkerElement({
             map: map,
-            position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
+            position: {
+              lat: parseFloat(row.Latitude),
+              lng: parseFloat(row.Longitude)
+            },
             title: row.postcode,
             gmpClickable: true,
           });
@@ -25,9 +27,4 @@
       });
     }
   });
-})();
-
-// Make initMap globally accessible for Google Maps callback
-window.initMap = function () {
-  // This function is required if using callback=initMap in the API URL
 };
