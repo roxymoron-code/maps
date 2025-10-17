@@ -1,29 +1,48 @@
 async function initMap() {
-  const { Map } = 
-    await google.maps.importLibrary("maps");
-    await google.maps.importLibrary("marker");
+  const { Map, LatLngBounds } = await google.maps.importLibrary("maps");
+  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
   const map = new Map(document.getElementById("map"), {
     center: { lat: 52.396, lng: -0.725 },
-    zoom: 10,
+    zoom: 7,
+    mapId: 'DEMO_MAP_ID',
     gestureHandling: "greedy"
   });
 
-  Papa.parse("data/disp_postcodes_latlng.csv", {
-    download: true,
+  // Inlined CSV data. You can replace this with a URL using the `download` property.
+  const csvData = `postcode,Latitude,Longitude
+SW1A 0AA,51.5010,-0.1419
+PE35 6EN,52.8318,0.5297
+BT7 1NN,54.5843,-5.9331
+TR21 0HE,49.9360,-6.3220`;
+
+  Papa.parse(csvData, {
     header: true,
     complete: function (results) {
+      const bounds = new LatLngBounds();
+      
       results.data.forEach(row => {
         if (row.Latitude && row.Longitude) {
-          const marker = new google.maps.marker.AdvancedMarkerElement({
+          const position = { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) };
+          new AdvancedMarkerElement({
             map: map,
-            position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
+            position: position,
             title: row.postcode,
           });
+          bounds.extend(position);
         }
       });
+
+      // Fit the map to the bounds of the markers
+      if (results.data.length > 0) {
+        map.fitBounds(bounds);
+      }
+    },
+    error: function(error) {
+        console.error("Error parsing CSV:", error);
+        // You could display this error in a UI element
     }
   });
-})();
+}
 
 initMap();
