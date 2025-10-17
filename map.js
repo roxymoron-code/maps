@@ -12,23 +12,7 @@ async function initMap() {
 
   // Sample CSV data as a multi-line string.
   // You can replace this with your own data.
-  const csvData = `lat,lng
-37.7749,-122.4194
-34.0522,-118.2437
-40.7128,-74.0060
-41.8781,-87.6298
-29.7604,-95.3698
-39.9526,-75.1652
-33.4484,-112.0740
-25.7617,-80.1918
-36.1699,-115.1398
-47.6062,-122.3321
-51.5074,-0.1278
-48.8566,2.3522
-35.6895,139.6917
--33.8688,151.2093
--34.6037,-58.3816
-`;
+  const csvData = "/data/disp_postcodes_latlng.csv";
 
   const data = parseCSVData(csvData);
 
@@ -58,8 +42,8 @@ function parseCSVData(text) {
   }
 
   const headers = lines[0].toLowerCase().split(',').map(header => header.trim());
-  const latIndex = headers.indexOf('lat');
-  const lngIndex = headers.indexOf('lng');
+  const latIndex = headers.indexOf('Latitude');
+  const lngIndex = headers.indexOf('Longitude');
 
   if (latIndex === -1 || lngIndex === -1) {
       console.error("CSV data must contain 'lat' and 'lng' columns.");
