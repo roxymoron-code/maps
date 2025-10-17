@@ -1,58 +1,86 @@
+let map;
+let overlay;
+
 async function initMap() {
-  const { Map, InfoWindow } = await google.maps.importLibrary("maps");
-  const { LatLngBounds } = await google.maps.importLibrary("core");
-  const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+  const { Map } = await google.maps.importLibrary("maps");
 
-  const map = new Map(document.getElementById("map"), {
-    center: { lat: 52.396, lng: -0.725 },
-    zoom: 7,
+  map = new Map(document.getElementById("map"), {
+    zoom: 2,
+    center: { lat: 0, lng: 0 },
     mapId: 'DEMO_MAP_ID',
-    gestureHandling: "greedy"
   });
 
-  // Create one InfoWindow to be reused on marker clicks.
-  const infoWindow = new InfoWindow();
+  // Sample CSV data as a multi-line string.
+  // You can replace this with your own data.
+  const csvData = `lat,lng
+37.7749,-122.4194
+34.0522,-118.2437
+40.7128,-74.0060
+41.8781,-87.6298
+29.7604,-95.3698
+39.9526,-75.1652
+33.4484,-112.0740
+25.7617,-80.1918
+36.1699,-115.1398
+47.6062,-122.3321
+51.5074,-0.1278
+48.8566,2.3522
+35.6895,139.6917
+-33.8688,151.2093
+-34.6037,-58.3816
+`;
 
-  // Inlined CSV data. You can replace this with a URL using the `download` property.
-  const csvData = "data/disp_postcodes_latlng.csv";
+  const data = parseCSVData(csvData);
 
-  Papa.parse(csvData, {
-    download: true,
-    header: true,
-    complete: function (results) {
-      const bounds = new LatLngBounds();
-      
-      results.data.forEach(row => {
-        if (row.Latitude && row.Longitude) {
-          const position = { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) };
-          const marker = new AdvancedMarkerElement({
-            map: map,
-            position: position,
-            title: row.postcode,
-          });
+  overlay = new deck.GoogleMapsOverlay({});
+  overlay.setMap(map);
+  updateHeatmap(data);
+}
 
-          // Add a click listener for each marker.
-          marker.addListener('click', () => {
-            infoWindow.close();
-            infoWindow.setContent(`<b>Postcode:</b> ${marker.title}`);
-            infoWindow.open(map, marker);
-          });
+function updateHeatmap(data) {
+  const heatmapLayer = new deck.HeatmapLayer({
+    id: 'heatmap',
+    data: data,
+    getPosition: d => d,
+    getWeight: 1,
+    radiusPixels: 30,
+  });
+  overlay.setProps({ layers: [heatmapLayer] });
+}
 
-          bounds.extend(position);
+function parseCSVData(text) {
+  const data = [];
+  // Trim whitespace and split by new lines, filtering out empty lines
+  const lines = text.trim().split('\n').filter(line => line.trim() !== '');
+  if (lines.length < 2) {
+      console.error("CSV data must have a header and at least one data row.");
+      return [];
+  }
+
+  const headers = lines[0].toLowerCase().split(',').map(header => header.trim());
+  const latIndex = headers.indexOf('lat');
+  const lngIndex = headers.indexOf('lng');
+
+  if (latIndex === -1 || lngIndex === -1) {
+      console.error("CSV data must contain 'lat' and 'lng' columns.");
+      return [];
+  }
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',');
+    if (values.length > Math.max(latIndex, lngIndex)) {
+        const lat = parseFloat(values[latIndex]);
+        const lng = parseFloat(values[lngIndex]);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            // deck.gl expects data in [longitude, latitude] format
+            data.push([lng, lat]);
         }
-      });
-
-      // Fit the map to the bounds of the markers
-      if (results.data.length > 0) {
-        map.fitBounds(bounds);
-      }
-    },
-    error: function(error) {
-        console.error("Error parsing CSV:", error);
-        // In a real app, you would display this error in an HTML element
     }
-  });
+  }
+  return data;
 }
 
 initMap();
+
 
