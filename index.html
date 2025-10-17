@@ -10,49 +10,40 @@
     // Add other bootstrap parameters as needed, using camel case.
   });
 </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
   <div id="map" style="height: 600px; width: 100%;"></div>
-
   <script>
     let map;
-
-
-
-function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 52.396, lng: -0.725 },
-        zoom: 10,
-    });
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: 52.396, lng: -0.725 },
+          zoom: 10,
+      });
 
     // Load and parse the CSV file
-    Papa.parse("data/disp_postcodes_latlng.csv", {
+      Papa.parse("data/disp_postcodes_latlng.csv", {
         download: true,
         header: true,
         complete: function (results) {
             results.data.forEach(row => {
                 if (row.Latitude && row.Longitude) {
-                   const marker = new google.maps.marker.AdvancedMarkerElement({
+                    const marker = new google.maps.marker.AdvancedMarkerElement({
                         map: map,
                         position: { lat: parseFloat(row.Latitude), lng: parseFloat(row.Longitude) },
                         title: row.postcode,
                         gmpClickable: true,
                     });
-                  marker.addListener('click', ({ domEvent, latLng }) => {
-                    const { target } = domEvent;
-                    infoWindow.close();
-                    infoWindow.setContent(marker.title);
-                    infoWindow.open(marker.map, marker);
-                  });
                 }
             });
         }
     });
 }
-  </script>
+</script>
 </body>
 </html>
+
 
 
 
