@@ -1,4 +1,5 @@
 let map, heatmap;
+let statusMessage, errorDisplay; // UI elements
 
 // Provides sample data for the heatmap as a fallback.
 const getSampleData = () => [
@@ -16,6 +17,16 @@ const getSampleData = () => [
 ];
 
 async function initMap() {
+  // Get references to UI elements
+  statusMessage = document.getElementById('status-message');
+  errorDisplay = document.getElementById('error-display');
+
+  // Defensive check to ensure UI elements are present before proceeding
+  if (!statusMessage || !errorDisplay) {
+    console.error("Fatal Error: UI elements 'status-message' or 'error-display' not found.");
+    return;
+  }
+
   const { Map } = await google.maps.importLibrary("maps");
   const { HeatmapLayer } = await google.maps.importLibrary("visualization");
   await google.maps.importLibrary("core");
@@ -39,7 +50,6 @@ async function initMap() {
 }
 
 async function loadHeatmapData() {
-    const statusMessage = document.getElementById('status-message');
     try {
         statusMessage.textContent = 'Loading data from /data/heatmap-data.csv...';
         const response = await fetch('./data/heatmap-data.csv');
@@ -73,24 +83,20 @@ function fitBoundsToData(points) {
 }
 
 function displayError(message) {
-    const errorDiv = document.getElementById('error-display');
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
+    errorDisplay.textContent = message;
+    errorDisplay.style.display = 'block';
 }
 
 function clearError() {
-    const errorDiv = document.getElementById('error-display');
-    if (errorDiv) {
-        errorDiv.style.display = 'none';
-    }
+    errorDisplay.style.display = 'none';
 }
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n');
   if (lines.length === 0) return [];
-  const header = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/\"/g, ''));
-  const latIndex = header.indexOf('Latitude');
-  const lngIndex = header.indexOf('Longitude');
+  const header = lines.toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
+  const latIndex = header.indexOf('latitude');
+  const lngIndex = header.indexOf('longitude');
 
   if (latIndex === -1 || lngIndex === -1) {
     return [];
