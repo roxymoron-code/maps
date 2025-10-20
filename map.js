@@ -26,7 +26,7 @@ async function initMap() {
   overlay.setMap(map);
 
   try {
-    const response = await fetch('maps/data/disp_postcodes_latlng');
+    const response = await fetch('/data/disp_postcodes_latlng');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
