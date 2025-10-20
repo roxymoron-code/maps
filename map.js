@@ -1,91 +1,141 @@
-let map;
-let overlay;
+let map, heatmap;
+
+// Provides sample data for the heatmap as a fallback.
+const getSampleData = () => [
+    new google.maps.LatLng(37.782551, -122.445368),
+    new google.maps.LatLng(37.782745, -122.444586),
+    new google.maps.LatLng(37.782842, -122.443688),
+    new google.maps.LatLng(37.782919, -122.442815),
+    new google.maps.LatLng(37.782992, -122.442112),
+    new google.maps.LatLng(37.783100, -122.441461),
+    new google.maps.LatLng(37.783206, -122.440829),
+    new google.maps.LatLng(37.783273, -122.440324),
+    new google.maps.LatLng(37.783316, -122.439878),
+    new google.maps.LatLng(37.783357, -122.439498),
+    new google.maps.LatLng(37.783381, -122.439169)
+];
 
 async function initMap() {
   const { Map } = await google.maps.importLibrary("maps");
-  const { ControlPosition } = await google.maps.importLibrary("core");
+  const { HeatmapLayer } = await google.maps.importLibrary("visualization");
+  await google.maps.importLibrary("core");
 
   map = new Map(document.getElementById("map"), {
-    zoom: 2,
-    center: { lat: 0, lng: 0 },
-    mapId: 'DEMO_MAP_ID',
+    zoom: 12,
+    center: { lat: 37.774546, lng: -122.433523 },
+    mapId: 'DEMO_MAP_ID'
   });
 
-  // Create the panel programmatically
-  const panel = document.createElement("div");
-  panel.classList.add("heatmap-panel");
-  panel.innerHTML = `
-    <h2>CSV Heatmap</h2>
-    <div id="panel-content"><p>Loading data from '/data/disp_postcodes_latlng.csv'...</p></div>
-  `;
-  map.controls[ControlPosition.TOP_LEFT].push(panel);
-  const panelContent = document.getElementById("panel-content");
-
-
-  overlay = new deck.GoogleMapsOverlay({});
-  overlay.setMap(map);
-
-  try {
-    const response = await fetch('/data/disp_postcodes_latlng.csv');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const csvData = await response.text();
-    const data = parseCSVData(csvData);
-
-    if (data.length > 0) {
-      updateHeatmap(data);
-      panelContent.innerHTML = "<p>This heatmap visualizes data loaded from the CSV file specified in the script.</p>";
-    } else {
-      throw new Error("No data could be parsed from the CSV. Check headers and format.");
-    }
-  } catch (error) {
-    console.error('Error loading or processing CSV data:', error);
-    panelContent.innerHTML = `<p><strong>Error:</strong> Could not load or parse the CSV data from the path '/data/disp_postcodes_latlng'.</p>
-                       <p>Please ensure the file exists at that path on your server and is publicly accessible. The preview may not work if the file is not hosted, but the code will work in your local environment if the file structure is correct.</p>`;
-  }
-}
-
-function updateHeatmap(data) {
-  const heatmapLayer = new deck.HeatmapLayer({
-    id: 'heatmap',
-    data: data,
-    getPosition: d => d,
-    getWeight: 1,
-    radiusPixels: 30,
+  heatmap = new HeatmapLayer({
+    data: [],
+    map: map,
   });
-  overlay.setProps({ layers: [heatmapLayer] });
+
+  loadHeatmapData();
+
+  document.getElementById("change-gradient").addEventListener("click", changeGradient);
+  document.getElementById("change-radius").addEventListener("click", changeRadius);
+  document.getElementById("change-opacity").addEventListener("click", changeOpacity);
 }
 
-function parseCSVData(text) {
-  const data = [];
-  const lines = text.trim().split('\n').filter(line => line.trim() !== '');
-  if (lines.length < 2) {
-      console.error("CSV data must have a header and at least one data row.");
-      return [];
-  }
+async function loadHeatmapData() {
+    const statusMessage = document.getElementById('status-message');
+    try {
+        statusMessage.textContent = 'Loading data from /data/heatmap-data.csv...';
+        const response = await fetch('./data/heatmap-data.csv');
+        if (!response.ok) {
+            throw new Error('CSV file not found or failed to load.');
+        }
+        const csvData = await response.text();
+        const points = parseCSV(csvData);
+        if (points.length > 0) {
+            heatmap.setData(points);
+            fitBoundsToData(points);
+            statusMessage.textContent = 'Successfully loaded data from /data/heatmap-data.csv.';
+            clearError();
+        } else {
+            throw new Error('Could not parse CSV or file is empty. Ensure it has "latitude" and "longitude" columns.');
+        }
+    } catch (error) {
+        console.warn('Heatmap data error:', error.message);
+        statusMessage.textContent = 'Using sample data.';
+        const samplePoints = getSampleData();
+        heatmap.setData(samplePoints);
+        fitBoundsToData(samplePoints);
+        displayError('Could not load `/data/heatmap-data.csv`. Displaying sample data instead. Make sure your file is in the `/data` directory and has `latitude` and `longitude` columns.');
+    }
+}
 
-  const headers = lines.toLowerCase().split(',').map(header => header.trim());
-  const latIndex = headers.indexOf('latitude');
-  const lngIndex = headers.indexOf('longitude');
+function fitBoundsToData(points) {
+    const bounds = new google.maps.LatLngBounds();
+    points.forEach(p => bounds.extend(p));
+    map.fitBounds(bounds);
+}
+
+function displayError(message) {
+    const errorDiv = document.getElementById('error-display');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+
+function clearError() {
+    const errorDiv = document.getElementById('error-display');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
+}
+
+function parseCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  if (lines.length === 0) return [];
+  const header = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/\"/g, ''));
+  const latIndex = header.indexOf('Latitude');
+  const lngIndex = header.indexOf('Longitude');
 
   if (latIndex === -1 || lngIndex === -1) {
-      console.error("CSV data must contain 'Latitude' and 'Longitude' columns.");
-      return [];
+    return [];
   }
 
+  const points = [];
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',');
-    if (values.length > Math.max(latIndex, lngIndex)) {
-        const lat = parseFloat(values[latIndex]);
-        const lng = parseFloat(values[lngIndex]);
-
-        if (!isNaN(lat) && !isNaN(lng)) {
-            data.push([lng, lat]);
-        }
+    const data = lines[i].split(',');
+    if (data.length > Math.max(latIndex, lngIndex)) {
+      const lat = parseFloat(data[latIndex]);
+      const lng = parseFloat(data[lngIndex]);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        points.push(new google.maps.LatLng(lat, lng));
+      }
     }
   }
-  return data;
+  return points;
+}
+
+function changeGradient() {
+  const gradient = [
+    "rgba(0, 255, 255, 0)",
+    "rgba(0, 255, 255, 1)",
+    "rgba(0, 191, 255, 1)",
+    "rgba(0, 127, 255, 1)",
+    "rgba(0, 63, 255, 1)",
+    "rgba(0, 0, 255, 1)",
+    "rgba(0, 0, 223, 1)",
+    "rgba(0, 0, 191, 1)",
+    "rgba(0, 0, 159, 1)",
+    "rgba(0, 0, 127, 1)",
+    "rgba(63, 0, 91, 1)",
+    "rgba(127, 0, 63, 1)",
+    "rgba(191, 0, 31, 1)",
+    "rgba(255, 0, 0, 1)",
+  ];
+  heatmap.set("gradient", heatmap.get("gradient") ? null : gradient);
+}
+
+function changeRadius() {
+  heatmap.set("radius", heatmap.get("radius") ? null : 20);
+}
+
+function changeOpacity() {
+  heatmap.set("opacity", heatmap.get("opacity") ? null : 0.2);
 }
 
 initMap();
