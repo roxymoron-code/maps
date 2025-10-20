@@ -51,8 +51,8 @@ async function initMap() {
 
 async function loadHeatmapData() {
     try {
-        statusMessage.textContent = 'Loading data from /data/heatmap-data.csv...';
-        const response = await fetch('./data/dsip_postcodes_latlng.csv');
+        statusMessage.textContent = 'Loading data from /data/disp_postcodes_latlng.csv...';
+        const response = await fetch('./data/disp_postcodes_latlng.csv');
         if (!response.ok) {
             throw new Error('CSV file not found or failed to load.');
         }
@@ -61,7 +61,7 @@ async function loadHeatmapData() {
         if (points.length > 0) {
             heatmap.setData(points);
             fitBoundsToData(points);
-            statusMessage.textContent = 'Successfully loaded data from /data/dsip_postcodes_latlng.csv';
+            statusMessage.textContent = 'Successfully loaded data from /data/disp_postcodes_latlng.csv';
             clearError();
         } else {
             throw new Error('Could not parse CSV or file is empty. Ensure it has "latitude" and "longitude" columns.');
@@ -72,7 +72,7 @@ async function loadHeatmapData() {
         const samplePoints = getSampleData();
         heatmap.setData(samplePoints);
         fitBoundsToData(samplePoints);
-        displayError('Could not load `/data/dsip_postcodes_latlng.csv`. Displaying sample data instead. Make sure your file is in the `/data` directory and has `latitude` and `longitude` columns.');
+        displayError('Could not load `/data/disp_postcodes_latlng.csv`. Displaying sample data instead. Make sure your file is in the `/data` directory and has `latitude` and `longitude` columns.');
     }
 }
 
