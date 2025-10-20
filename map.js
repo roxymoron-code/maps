@@ -51,8 +51,8 @@ async function initMap() {
 
 async function loadHeatmapData() {
     try {
-        statusMessage.textContent = 'Loading data from /data/disp_postcodes_latlng.csv...';
-        const response = await fetch('./data/disp_postcodes_latlng.csv');
+        statusMessage.textContent = 'Loading data from /data/disp_postcode_latlng.csv...';
+        const response = await fetch('./data/disp_postcode_latlng.csv');
         if (!response.ok) {
             throw new Error('CSV file not found or failed to load.');
         }
@@ -61,10 +61,13 @@ async function loadHeatmapData() {
         if (points.length > 0) {
             heatmap.setData(points);
             fitBoundsToData(points);
-            statusMessage.textContent = 'Successfully loaded data from /data/disp_postcodes_latlng.csv';
+            statusMessage.textContent = 'Successfully loaded data from /data/disp_postcode_latlng.csv.';
             clearError();
         } else {
-            throw new Error('Could not parse CSV or file is empty. Ensure it has "latitude" and "longitude" columns.');
+            // Error is displayed inside parseCSV if header is wrong
+            if (errorDisplay.style.display === 'none') {
+                 throw new Error('Could not parse CSV or file is empty.');
+            }
         }
     } catch (error) {
         console.warn('Heatmap data error:', error.message);
@@ -72,7 +75,7 @@ async function loadHeatmapData() {
         const samplePoints = getSampleData();
         heatmap.setData(samplePoints);
         fitBoundsToData(samplePoints);
-        displayError('Could not load `/data/disp_postcodes_latlng.csv`. Displaying sample data instead. Make sure your file is in the `/data` directory and has `latitude` and `longitude` columns.');
+        displayError('Could not load `/data/disp_postcode_latlng.csv`. Displaying sample data instead. Make sure your file is in the `/data` directory and has `latitude` and `longitude` columns.');
     }
 }
 
@@ -92,19 +95,35 @@ function clearError() {
 }
 
 function parseCSV(csvText) {
-  const lines = csvText.trim().split('\n');
-  if (lines.length === 0) return [];
-  const header = lines.toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
+  if (typeof csvText !== 'string') {
+    console.error("Input to parseCSV is not a string.");
+    return [];
+  }
+
+  const lines = csvText.trim().split(/\r?\n/);
+
+  if (lines.length < 1 || lines[0].trim() === '') {
+    console.error("CSV data is empty or contains only whitespace.");
+    return [];
+  }
+
+  const headerLine = lines.shift();
+  const header = headerLine.toLowerCase().split(',').map(h => h.trim().replace(/\"/g, ''));
+
   const latIndex = header.indexOf('latitude');
   const lngIndex = header.indexOf('longitude');
 
   if (latIndex === -1 || lngIndex === -1) {
+    console.error('CSV header must contain "latitude" and "longitude" columns.');
+    displayError('CSV header must contain "latitude" and "longitude" columns.');
     return [];
   }
 
   const points = [];
-  for (let i = 1; i < lines.length; i++) {
-    const data = lines[i].split(',');
+  for (const line of lines) {
+    if (line.trim() === '') continue;
+
+    const data = line.split(',');
     if (data.length > Math.max(latIndex, lngIndex)) {
       const lat = parseFloat(data[latIndex]);
       const lng = parseFloat(data[lngIndex]);
