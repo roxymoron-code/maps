@@ -16,7 +16,7 @@ async function initMap() {
   panel.classList.add("heatmap-panel");
   panel.innerHTML = `
     <h2>CSV Heatmap</h2>
-    <div id="panel-content"><p>Loading data from '/data/disp_postcodes_latlng'...</p></div>
+    <div id="panel-content"><p>Loading data from '/data/disp_postcodes_latlng.csv'...</p></div>
   `;
   map.controls[ControlPosition.TOP_LEFT].push(panel);
   const panelContent = document.getElementById("panel-content");
@@ -26,7 +26,7 @@ async function initMap() {
   overlay.setMap(map);
 
   try {
-    const response = await fetch('/data/disp_postcodes_latlng');
+    const response = await fetch('/data/disp_postcodes_latlng.csv');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
